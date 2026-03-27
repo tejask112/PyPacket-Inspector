@@ -1,7 +1,6 @@
 import psutil
 
 def get_network_info(socket, subprocess):
-    
     hostname = socket.gethostname()
     ipv4 = get_local_ipv4(socket)
     ipv6 = get_local_ipv6(socket)
@@ -12,7 +11,6 @@ def get_network_info(socket, subprocess):
     print(f"IPv4 Address: {ipv4}")
     print(f"IPv6 Address: {ipv6} (global)\n")
     
-
 def get_local_ipv4(socket):
     open_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -23,7 +21,6 @@ def get_local_ipv4(socket):
     finally:
         open_socket.close()
 
-
 def get_local_ipv6(socket):
     open_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     try:
@@ -33,7 +30,6 @@ def get_local_ipv6(socket):
         print("Could not get IPv6 Address")
     finally:
         open_socket.close()
-
 
 def get_ssid(subprocess):
     try:

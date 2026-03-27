@@ -5,7 +5,7 @@ from visuals.title_text import display_title
 
 from core.filters import input_filters
 from core.network_info import get_network_info, get_active_interfaces
-from core.sniffer import start_sniffing
+from core.Sniffer import Sniffer
 
 def start_app():
 
@@ -16,7 +16,8 @@ def start_app():
     interface_filter, ip_filter, address_type_filter, address_type_value, show_detailed_info = input_filters(active_interfaces)
 
     try:
-        start_sniffing(socket)
+        sniffer = Sniffer('wlo1')
+        sniffer.start_sniffing(socket)
     except KeyboardInterrupt:
         print("Goodbye!")
 
