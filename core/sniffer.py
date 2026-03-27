@@ -1,8 +1,10 @@
-import socket
+
 from datetime import datetime
+import subprocess
 
+from .network_info import get_network_info
 
-def start_sniffing():
+def start_sniffing(socket):
     interface="wlo1"
     
     open_socket = socket.socket(
