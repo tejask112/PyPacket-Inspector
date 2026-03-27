@@ -1,11 +1,11 @@
-import subprocess
+import psutil
 
-def get_network_info(socket):
+def get_network_info(socket, subprocess):
     
     hostname = socket.gethostname()
     ipv4 = get_local_ipv4(socket)
     ipv6 = get_local_ipv6(socket)
-    ssid = get_ssid()
+    ssid = get_ssid(subprocess)
 
     print(f"\nHostname: {hostname}")
     print(f"SSID: {ssid}")
@@ -35,8 +35,19 @@ def get_local_ipv6(socket):
         open_socket.close()
 
 
-def get_ssid():
+def get_ssid(subprocess):
     try:
         return subprocess.check_output(["iwgetid", "-r"], text=True).strip()
     except Exception:
         print("Could not get SSID")
+
+def get_active_interfaces():
+    interface_map_status = psutil.net_if_stats()
+    interface_address_map = psutil.net_if_addrs()
+    active_interfaces = []
+
+    for name, status in interface_map_status.items():
+        if name in interface_address_map and status.isup:
+            active_interfaces.append(f" {name}")
+
+    return active_interfaces

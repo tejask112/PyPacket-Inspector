@@ -16,7 +16,7 @@ def start_sniffing(socket):
     open_socket.bind((interface, 0))
     open_socket.setsockopt(socket.SOL_SOCKET, 8, 1)
 
-    print("Sniffing...")
+    print("\nSniffing...")
 
     while True:
         raw_data, address = open_socket.recvfrom(65535)
