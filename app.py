@@ -13,7 +13,7 @@ def start_app():
     get_network_info(socket, subprocess)
 
     active_interfaces = get_active_interfaces()
-    input_filters(active_interfaces)
+    interface_filter, ip_filter, address_type_filter, address_type_value, show_detailed_info = input_filters(active_interfaces)
 
     try:
         start_sniffing(socket)
