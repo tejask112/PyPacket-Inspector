@@ -1,3 +1,4 @@
+import struct 
 
 from .formatter import mac_to_str
 
@@ -18,5 +19,11 @@ def parse_address(address, NetworkLookupStore):
 
     return iface, mac_address, protocol, packet_type, hardware_address_type
 
-def parse_raw_data(raw_data, NetworkLookupStore):
-    pass
+def parse_raw_data(data, NetworkLookupStore):
+    destination_mac_addr = mac_to_str(data[0:6])
+    source_mac_addr = mac_to_str(data[6:12])
+    ether_type = NetworkLookupStore.ADDRESS_PART["proto"].get(struct.unpack('!H', data[12:14])[0])
+    
+
+
+    return destination_mac_addr, source_mac_addr, ether_type
