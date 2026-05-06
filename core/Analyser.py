@@ -1,10 +1,17 @@
 from dataclasses import dataclass
 
 
-from ParsedPacket import ParsedPacket
-from utils.NetworkLookupStore import NetworkLookupStore
+from .ParsedPacket import ParsedPacket
+from .utils.NetworkLookupStore import NetworkLookupStore
 
-from ..parsers.ethernet import parse_ethernet
+from parsers.ethernet import parse_ethernet
+from parsers.ipv4 import parse_ipv4
+from parsers.ipv6 import parse_ipv6
+from parsers.arp import parse_arp
+from parsers.tcp import parse_tcp
+from parsers.udp import parse_udp
+from parsers.icmp import parse_icmp
+from parsers.dns import parse_dns
 
 @dataclass
 class Analyser:
@@ -34,9 +41,7 @@ class Analyser:
         return parsed_packet
     
 
-    """ 
-    LAYER 2 - ETHERNET decoder 
-    """
+    # LAYER 2 - ETHERNET decoder 
     def _parse_ethernet(self, parsed_packet: ParsedPacket):
         parsed_packet.ethernet = parse_ethernet(self, parsed_packet.raw_data)
         ethertype = parsed_packet.ethernet.get("ethertype")
@@ -54,4 +59,83 @@ class Analyser:
             self._parse_arp(parsed_packet)
 
 
+    # LAYER 3 - NETWORK decoder 
+    def _parse_ipv4(self, parsed_packet: ParsedPacket):
+        ip_data = parsed_packet.raw_data[14:]
+        parsed_packet.network = parse_ipv4(ip_data)
 
+        protocol = parsed_packet.network.get("protocol")
+        ihl = parsed_packet.network.get("ihl", 20)
+
+        transport_data = ip_data[ihl:]
+
+        if protocol == NetworkLookupStore.TRANSPORT_PROTOCOL.get("TCP"):
+            parsed_packet.transport_protocol = "TCP"
+            self._parse_tcp(parsed_packet, transport_data)
+
+        elif protocol == NetworkLookupStore.TRANSPORT_PROTOCOL.get("UDP"):
+            parsed_packet.transport_protocol = "UDP"
+            self._parse_udp(parsed_packet, transport_data)
+
+        elif protocol == NetworkLookupStore.TRANSPORT_PROTOCOL.get("ICMP"):
+            parsed_packet.transport_protocol = "ICMP"
+            self._parse_icmp(parsed_packet, transport_data)
+
+
+    def _parse_ipv6(self, parsed_packet: ParsedPacket):
+        ip_data = parsed_packet.raw_data[14:]
+        parsed_packet.network = parse_ipv6(ip_data)
+
+        next_header = parsed_packet.network.get("next_header")
+        transport_data = ip_data[40:]
+
+        if next_header == NetworkLookupStore.TRANSPORT_PROTOCOL.get("TCP"):
+            parsed_packet.transport_protocol = "TCP"
+            self._parse_tcp(parsed_packet, transport_data)
+
+        elif next_header == NetworkLookupStore.TRANSPORT_PROTOCOL.get("UDP"):
+            parsed_packet.transport_protocol = "UDP"
+            self._parse_udp(parsed_packet, transport_data)
+
+        elif next_header == NetworkLookupStore.TRANSPORT_PROTOCOL.get("ICMP"):
+            parsed_packet.transport_protocol = "ICMP"
+            self._parse_icmp(parsed_packet, transport_data)
+
+
+    def _parse_arp(self, parsed: ParsedPacket):
+        arp_data = parsed.raw_data[14:]
+        parsed.network = parse_arp(arp_data)
+
+    # LAYER 4 - TRANSPORT decoder 
+    def _parse_tcp(self, parsed_packet: ParsedPacket, transport_data: bytes):
+        parsed_packet.transport = parse_tcp(transport_data)
+
+        src_port = parsed_packet.transport.get("src_port")
+        dst_port = parsed_packet.transport.get("dst_port")
+        payload = parsed_packet.transport.get("payload", b"")
+
+        ports = NetworkLookupStore.DNS_CODES.get("PORTS")
+        if src_port in ports or dst_port in ports:
+            parsed_packet.application_protocol = "DNS"
+            self._parse_dns(parsed_packet, payload)
+
+    def _parse_udp(self, parsed_packet: ParsedPacket, transport_data: bytes):
+        parsed_packet.transport = parse_udp(transport_data)
+
+        src_port = parsed_packet.transport.get("src_port")
+        dst_port = parsed_packet.transport.get("dst_port")
+        payload = parsed_packet.transport.get("payload", b"")
+
+        ports = NetworkLookupStore.DNS_CODES.get("PORTS")
+        if src_port in ports or dst_port in ports:
+            parsed_packet.application_protocol = "DNS"
+            self._parse_dns(parsed_packet, payload)
+
+    def _parse_icmp(self, parsed: ParsedPacket, transport_data: bytes):
+        parsed.transport = parse_icmp(transport_data)
+
+
+    # LAYER 7 - APPLICATION decoder 
+    def _parse_dns(self, parsed: ParsedPacket, payload: bytes):
+        if payload:
+            parsed.application = parse_dns(payload)

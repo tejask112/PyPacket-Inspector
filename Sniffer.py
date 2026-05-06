@@ -3,6 +3,7 @@ from datetime import datetime
 from core.utils.parser import parse_raw_data
 from core.utils.NetworkLookupStore import NetworkLookupStore
 from core.RawPacket import RawPacket
+from core.Analyser import Analyser
 
 
 class Sniffer:
@@ -11,7 +12,7 @@ class Sniffer:
     def __init__(self, interface):
         """Instantiates a Sniffer object fixed to a specified network interface."""
         self.interface = interface
-        self.NetworkLookupStore = NetworkLookupStore
+        self.analyser = Analyser()
 
     def start_sniffing(self, socket):
         """Opens a raw socket and continuously captures and prints each packet to terminal."""
@@ -39,11 +40,12 @@ class Sniffer:
                     raw_data=raw_data
                 )
 
-                # parsed_packet = analyzer.analyze(raw_packet)
-                # renderer.render(parsed_packet)  ← next step
+                print(f"Caught Packet #{raw_packet.packet_number} @ {raw_packet.timestamp}")
+
+                parsed_packet = self.analyser.analyse(raw_packet)
+                # renderer.render(parsed_packet)
 
                 
-
         except KeyboardInterrupt:
             print("SUMMARY GOES HERE")
         finally:

@@ -5,6 +5,7 @@ from visuals.title_text import display_title
 
 from core.filters import input_filters
 from core.network_info import print_network_info, get_active_interfaces
+from core.Analyser import Analyser
 from Sniffer import Sniffer
 
 def start_app():
@@ -16,13 +17,11 @@ def start_app():
     active_interfaces = get_active_interfaces()
     interface_filter, ip_filter, address_type_filter, address_type_value, show_detailed_info = input_filters(active_interfaces)
 
-    try:
-        
-
+    try:    
         sniffer = Sniffer('wlo1')
         sniffer.start_sniffing(socket)
-    except Exception:
-        print("Exception Occured")
+    except Exception as e:
+        print(f"Exception: {str(e)}")
 
 
 if __name__ == "__main__":
