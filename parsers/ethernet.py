@@ -12,9 +12,8 @@ def parse_ethernet(raw_data: bytes) -> dict:
     if len(raw_data) < 14:
         raise ValueError(f"Captured Data Packet too short to be an Ethernet Frame. Expected Minimum Length 14, Got Minimum Length {len(raw_data)}")
     
-    dst_mac_raw = raw_data[0:6]
-    src_mac_raw = raw_data[6:11]
-    ethertype = int.from_bytes(raw_data[12:14], byteorder="big")
+    dst_mac_raw, src_mac_raw, ethertype = struct.unpack("!6s6sH", raw_data[:14])
+    # print(f"dst: {dst_mac_raw}, src: {src_mac_raw}, ethertype: {hex(ethertype)}")
 
     return {
         "dst_mac": _mac_to_str(dst_mac_raw),

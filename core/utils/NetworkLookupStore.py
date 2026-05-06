@@ -18,19 +18,10 @@ class NetworkLookupStore:
             1: "Ethernet/WiFi",
             772: "Loopback",
             512: "PPP"
-        },
-        "eth_type": {
-            "IPV4": 0x0800,
-            "IPV6": 0x86DD,
-            "ARP": 0x0806
         }
-    },
-
-    TRANSPORT_PROTOCOL = {
-        "TCP": 6,
-        "UDP": 17,
-        "ICMP": 1
     }
+
+    
 
     ARP_CODES = {
         "REQUEST": 1,
@@ -61,11 +52,29 @@ class NetworkLookupStore:
         }
     }
 
+    ETHER_CODES = {
+        0x0800: "IPv4",
+        0x86DD: "IPv6",
+        0x0806: "ARP",
+    }
+
+    ETHER_TYPES = {
+        "IPV4": 0x0800,
+        "IPV6": 0x86DD,
+        "ARP": 0x0806
+    }
+
     ICMP_CODES = {
         "ECHO_REPLY": 0,
         "ECHO_REQUEST": 8,
         "DEST_UNREACH": 3,
         "TIME_EXCEEDED": 11
+    }
+
+    TRANSPORT_PROTOCOL = {
+        "TCP": 6,
+        "UDP": 17,
+        "ICMP": 1
     }
 
     def __init__(self):

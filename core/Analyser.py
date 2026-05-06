@@ -43,18 +43,18 @@ class Analyser:
 
     # LAYER 2 - ETHERNET decoder 
     def _parse_ethernet(self, parsed_packet: ParsedPacket):
-        parsed_packet.ethernet = parse_ethernet(self, parsed_packet.raw_data)
+        parsed_packet.ethernet = parse_ethernet(parsed_packet.raw_data)
         ethertype = parsed_packet.ethernet.get("ethertype")
 
-        if ethertype == NetworkLookupStore.ADDRESS_PART["eth_type"].get("IPV4"):
+        if ethertype == NetworkLookupStore.ETHER_TYPES.get("IPV4"):
             parsed_packet.network_protocol = "IPv4"
             self._parse_ipv4(parsed_packet)
 
-        elif ethertype == NetworkLookupStore.ADDRESS_PART["eth_type"].get("IPV6"):
+        elif ethertype == NetworkLookupStore.ETHER_TYPES.get("IPV6"):
             parsed_packet.network_protocol = "IPv6"
             self._parse_ipv6(parsed_packet)
 
-        elif ethertype == NetworkLookupStore.ADDRESS_PART["eth_type"].get("ARP"):
+        elif ethertype == NetworkLookupStore.ETHER_TYPES.get("ARP"):
             parsed_packet.network_protocol = "ARP"
             self._parse_arp(parsed_packet)
 

@@ -1,5 +1,6 @@
 import socket
 import subprocess
+import traceback
 
 from visuals.title_text import display_title
 
@@ -21,7 +22,8 @@ def start_app():
         sniffer = Sniffer('wlo1')
         sniffer.start_sniffing(socket)
     except Exception as e:
-        print(f"Exception: {str(e)}")
+        print(f"\nException: {str(e)} \n")
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
