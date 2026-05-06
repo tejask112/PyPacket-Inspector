@@ -28,3 +28,6 @@ def parse_raw_data(data, NetworkLookupStore):
     payload = data[14:]
 
     return destination_mac_addr, source_mac_addr, ether_type, payload
+
+def get_protocol(data, NetworkLookupStore):
+    pass
