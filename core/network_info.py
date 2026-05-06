@@ -1,6 +1,6 @@
 import psutil
 
-def get_network_info(socket, subprocess):
+def print_network_info(socket, subprocess):
     hostname = socket.gethostname()
     ipv4 = get_local_ipv4(socket)
     ipv6 = get_local_ipv6(socket)
