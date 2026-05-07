@@ -3,12 +3,78 @@ from datetime import datetime
 from core.utils.NetworkLookupStore import NetworkLookupStore
 
 class Renderer:
+    
+    show_detailed_info: bool
+
+    def __init__(self, show_detailed_info: bool = False):
+        self.show_detailed_info = show_detailed_info
 
     def render(self, packet) -> None:
+        if (self.show_detailed_info):
+            self._render_detailed_view(packet)
+        else:
+            self._render_compact_view(packet)
+
+    # RENDERING TYPES
+    def _render_detailed_view(self, packet):
         self._render_header(packet)
         self._render_network(packet)
         self._render_transport(packet)
-        # self._render_application(packet)
+        self._render_application(packet)
+
+    def _render_compact_view(self, packet):
+        timestamp = packet.timestamp.strftime("%H:%M:%S.%f")[:-3]
+        num = packet.packet_number
+        length = len(packet.raw_data)
+        net = packet.network
+        transport = packet.transport
+        net_proto = packet.network_protocol
+        trans_proto  = packet.transport_protocol
+        app_proto = packet.application_protocol
+
+        src_ip = net.get("src_ip", "?")
+        dst_ip = net.get("dst_ip", "?")
+
+        if trans_proto in ("TCP", "UDP"):
+            src_port    = transport.get("src_port", "?")
+            dst_port    = transport.get("dst_port", "?")
+            proto_label = app_proto if app_proto else trans_proto
+
+            if trans_proto == "TCP":
+                flags = transport.get("flags", {})
+                flags_str = "/".join(k for k, v in flags.items() if v)
+                summary = f"{src_ip}:{src_port} -> {dst_ip}:{dst_port}  [{flags_str}]"
+            else:
+                summary = f"{src_ip}:{src_port} -> {dst_ip}:{dst_port}"
+
+            # append domain name if DNS
+            if app_proto == "DNS":
+                dns = packet.application
+                questions  = dns.get("questions", [])
+                is_response = dns.get("flags", {}).get("is_response", False)
+                name = questions[0].get("name") if questions else None
+
+                if name:
+                    label = "RSP" if is_response else "QRY"
+                    summary += f"  {label}: {name}"
+
+        elif trans_proto == "ICMP":
+            proto_label = "ICMP"
+            type_label  = transport.get("type_label", "?")
+            summary = f"{src_ip} -> {dst_ip}  {type_label}"
+
+        elif net_proto == "ARP":
+            proto_label = "ARP"
+            op = packet.network.get("op_label", "?").capitalize()
+            sender_ip = packet.network.get("sender_ip", "?")
+            target_ip = packet.network.get("target_ip", "?")
+            summary = f"{op}  {sender_ip} -> {target_ip}"
+
+        else:
+            proto_label = net_proto or "UNKNOWN"
+            summary = f"{src_ip} -> {dst_ip}"
+
+        print(f"[{timestamp}]  #{num}  {net_proto}  {proto_label}  {length}B  {summary}")
 
     # RENDER HEADER TXT
     def _render_header(self, packet) -> None:

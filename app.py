@@ -19,7 +19,10 @@ def start_app():
     interface_filter, ip_filter, address_type_filter, address_type_value, show_detailed_info = input_filters(active_interfaces)
 
     try:    
-        sniffer = Sniffer('wlo1')
+        sniffer = Sniffer(
+            'wlo1', 
+            show_detailed_info
+        )
         sniffer.start_sniffing(socket)
     except Exception as e:
         print(f"\nException: {str(e)} \n")

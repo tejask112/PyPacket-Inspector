@@ -67,6 +67,6 @@ def input_filters(active_interfaces):
     print("\n 2) Configure Display")
     show_detailed_info = inquirer.select(message="Show Detailed Information?", choices=[' Yes', ' No'], default=' No', style=STYLE).execute().strip()
     show_detailed_info = True if show_detailed_info == "Yes" else False
-
+    
     return interface_filter, ip_filter, address_type_filter, address_type_value, show_detailed_info
 

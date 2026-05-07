@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from core.utils.parser import parse_raw_data
 from core.utils.NetworkLookupStore import NetworkLookupStore
 from core.RawPacket import RawPacket
 from core.Analyser import Analyser
@@ -10,11 +9,11 @@ from core.Render import Renderer
 class Sniffer:
     """Sniff raw network packets from a given network interface."""
 
-    def __init__(self, interface):
+    def __init__(self, interface, show_detailed_info):
         """Instantiates a Sniffer object fixed to a specified network interface."""
         self.interface = interface
         self.analyser = Analyser()
-        self.renderer = Renderer()
+        self.renderer = Renderer(show_detailed_info=show_detailed_info)
 
     def start_sniffing(self, socket):
         """Opens a raw socket and continuously captures and prints each packet to terminal."""
