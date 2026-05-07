@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from .ParsedPacket import ParsedPacket
 from .utils.NetworkLookupStore import NetworkLookupStore
+from .utils.validator import validate_ipv4_checksum, validate_tcp_checksum, validate_udp_checksum, validate_icmp_checksum
 
 from parsers.ethernet import parse_ethernet
 from parsers.ipv4 import parse_ipv4
@@ -63,44 +64,54 @@ class Analyser:
     def _parse_ipv4(self, parsed_packet: ParsedPacket):
         ip_data = parsed_packet.raw_data[14:]
         parsed_packet.network = parse_ipv4(ip_data)
+        parsed_packet.network["checksum_valid"] = validate_ipv4_checksum(ip_data)
 
         protocol = parsed_packet.network.get("protocol")
         ihl = parsed_packet.network.get("ihl", 20)
 
-        transport_data = ip_data[ihl:]
+        total_length = parsed_packet.network.get("total_length", len(ip_data))
+        transport_data = ip_data[ihl:total_length]
 
         if protocol == NetworkLookupStore.TRANSPORT_PROTOCOL.get("TCP"):
             parsed_packet.transport_protocol = "TCP"
             self._parse_tcp(parsed_packet, transport_data)
+            parsed_packet.transport["checksum_valid"] = validate_tcp_checksum(parsed_packet.network, transport_data)
+            
 
         elif protocol == NetworkLookupStore.TRANSPORT_PROTOCOL.get("UDP"):
             parsed_packet.transport_protocol = "UDP"
             self._parse_udp(parsed_packet, transport_data)
+            parsed_packet.transport["checksum_valid"] = validate_udp_checksum(parsed_packet.network, transport_data)
+
 
         elif protocol == NetworkLookupStore.TRANSPORT_PROTOCOL.get("ICMP"):
             parsed_packet.transport_protocol = "ICMP"
             self._parse_icmp(parsed_packet, transport_data)
+            parsed_packet.transport["checksum_valid"] = validate_icmp_checksum(transport_data)
 
 
     def _parse_ipv6(self, parsed_packet: ParsedPacket):
         ip_data = parsed_packet.raw_data[14:]
         parsed_packet.network = parse_ipv6(ip_data)
 
-        next_header = parsed_packet.network.get("next_header")
-        transport_data = ip_data[40:]
+        next_header    = parsed_packet.network.get("next_header")
+        payload_length = parsed_packet.network.get("payload_length", len(ip_data) - 40)
+
+        transport_data = ip_data[40:40 + payload_length]
 
         if next_header == NetworkLookupStore.TRANSPORT_PROTOCOL.get("TCP"):
             parsed_packet.transport_protocol = "TCP"
             self._parse_tcp(parsed_packet, transport_data)
+            parsed_packet.transport["checksum_valid"] = validate_tcp_checksum(parsed_packet.network, transport_data)
 
         elif next_header == NetworkLookupStore.TRANSPORT_PROTOCOL.get("UDP"):
             parsed_packet.transport_protocol = "UDP"
             self._parse_udp(parsed_packet, transport_data)
+            parsed_packet.transport["checksum_valid"] = validate_udp_checksum(parsed_packet.network, transport_data)
 
         elif next_header == NetworkLookupStore.TRANSPORT_PROTOCOL.get("ICMP"):
             parsed_packet.transport_protocol = "ICMP"
             self._parse_icmp(parsed_packet, transport_data)
-
 
     def _parse_arp(self, parsed: ParsedPacket):
         arp_data = parsed.raw_data[14:]

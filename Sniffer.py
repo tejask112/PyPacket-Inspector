@@ -5,6 +5,7 @@ from core.RawPacket import RawPacket
 from core.Analyser import Analyser
 from core.Render import Renderer
 from core.PacketFilter import PacketFilter
+from core.SessionStatistics import SessionStatistics
 
 class Sniffer:
     """Sniff raw network packets from a given network interface."""
@@ -15,6 +16,7 @@ class Sniffer:
         self.packet_filter = PacketFilter(ip_filter=ip_filter, address_type_filter=address_type_filter, address_type_value=address_type_value)
         self.analyser = Analyser()
         self.renderer = Renderer(show_detailed_info=show_detailed_info)
+        self.stats = SessionStatistics()
 
     def start_sniffing(self, socket):
         """Opens a raw socket and continuously captures and prints each packet to terminal."""
@@ -48,9 +50,9 @@ class Sniffer:
 
                 if self.packet_filter.validate(parsed_packet):
                     self.renderer.render(parsed_packet)
-
+                    self.stats.record_packet(parsed_packet)
                 
         except KeyboardInterrupt:
-            print("SUMMARY GOES HERE")
+            self.stats.render_statistics()
         finally:
             open_socket.close()

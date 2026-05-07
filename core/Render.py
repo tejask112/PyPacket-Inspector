@@ -1,13 +1,20 @@
 from datetime import datetime
+import socket
 
 from core.utils.NetworkLookupStore import NetworkLookupStore
+from core.network_info import get_local_ipv4, get_local_ipv6
 
 class Renderer:
     
     show_detailed_info: bool
+    local_ipv4: str
+    local_ipv6: str
 
     def __init__(self, show_detailed_info: bool = False):
         self.show_detailed_info = show_detailed_info
+        self.local_ipv4 = get_local_ipv4(socket=socket)
+        self.local_ipv6 = get_local_ipv6(socket=socket)
+
 
     def render(self, packet) -> None:
         if (self.show_detailed_info):
@@ -74,7 +81,9 @@ class Renderer:
             proto_label = net_proto or "UNKNOWN"
             summary = f"{src_ip} -> {dst_ip}"
 
-        print(f"[{timestamp}]  #{num}  {net_proto}  {proto_label}  {length}B  {summary}")
+        direction = "OUTBOUND" if packet.network.get("src_ip") == self.local_ipv4 or packet.network.get("src_ip") == self.local_ipv6 else "INBOUND"
+
+        print(f"[{timestamp}]  #{num}  {direction}  {net_proto}  {proto_label}  {length}B  {summary}")
 
     # RENDER HEADER TXT
     def _render_header(self, packet) -> None:
@@ -84,8 +93,9 @@ class Renderer:
         ethertype = eth.get("ethertype")
         ethertype_str = NetworkLookupStore.ETHER_CODES.get(ethertype, "")
         ethertype_disp = f"0x{ethertype:04X}" if ethertype is not None else "Unknown"
+        direction = "OUTBOUND" if packet.network.get("src_ip") == self.local_ipv4 or packet.network.get("src_ip") == self.local_ipv6 else "INBOUND"
 
-        print(f"[{timestamp}] Packet #{packet.packet_number} | IP {packet.network.get("src_ip")} \u2192 {packet.network.get("dst_ip")} (EtherType: {ethertype_disp} {ethertype_str})")   
+        print(f"[{timestamp}] Packet #{packet.packet_number} | {direction} | IP {packet.network.get("src_ip")} \u2192 {packet.network.get("dst_ip")} (EtherType: {ethertype_disp} {ethertype_str})")   
 
     # RENDER LAYER 3 NETWORK TXT
     def _render_network(self, packet) -> None:
@@ -108,6 +118,7 @@ class Renderer:
         print("IPv4")
         print(f"  Version: {ip_datagram.get('version')}")
         print(f"  Header Length: {ip_datagram.get('ihl')} bytes")
+        print(f"  Header Checksum: 0x{ip_datagram.get('checksum', 0):04x} {_checksum_label_check_offloaded(ip_datagram.get('checksum_valid'), self.local_ipv4, None, ip_datagram.get('src_ip'))}")
         print(f"  Total Length: {ip_datagram.get('total_length')}")
         print(f"  Identification: 0x{ip_datagram.get('identification', 0):04x}")
         print(f"  Flags: {flags_str}")
@@ -150,13 +161,13 @@ class Renderer:
         proto = packet.transport_protocol
 
         if proto == "TCP":
-            self._render_tcp(packet.transport)
+            self._render_tcp(packet.transport, packet.network)
         elif proto == "UDP":
             self._render_udp(packet.transport)
         elif proto == "ICMP":
             self._render_icmp(packet.transport)
 
-    def _render_tcp(self, tcp: dict) -> None:
+    def _render_tcp(self, tcp: dict, network: dict) -> None:
         src_port   = tcp.get("src_port", 0)
         dst_port   = tcp.get("dst_port", 0)
         flags_str  = _format_tcp_flags(tcp.get("flags", {}))
@@ -168,6 +179,7 @@ class Renderer:
         print(f"  Seq: {tcp.get('sequence')}")
         print(f"  Ack: {tcp.get('acknowledgement')}")
         print(f"  Header Length: {offset} bytes")
+        print(f"  Checksum: 0x{tcp.get('checksum', 0):04x} {_checksum_label_check_offloaded(tcp.get('checksum_valid'), self.local_ipv4, self.local_ipv6, network.get('src_ip'))}")
         print(f"  Flags: {flags_str}")
         print(f"  Window Size: {tcp.get('window_size')}")
         print(f"  Checksum: 0x{tcp.get('checksum', 0):04x}")
@@ -251,9 +263,9 @@ def _format_tcp_flags(flags: dict) -> str:
 def _format_ipv4_flags(flags_val: int) -> str:
     parts = []
     if flags_val & 0x2:
-        parts.append("DF")   # Don't Fragment
+        parts.append("DF")
     if flags_val & 0x1:
-        parts.append("MF")   # More Fragments
+        parts.append("MF")
     return ", ".join(parts) if parts else "None"
 
 
@@ -266,3 +278,9 @@ def _format_rcode(rcode: int) -> str:
         4: "NOTIMP",
         5: "REFUSED",
     }.get(rcode, f"UNKNOWN({rcode})")
+
+def _checksum_label_check_offloaded(valid: bool, local_ipv4: str, local_ipv6: str, src_ip: str) -> str:
+    if local_ipv4 == src_ip or local_ipv6 == src_ip:
+        return "[OFFLOADED]" 
+    else:
+        return "[VALID]" if valid else "[INVALID]"
