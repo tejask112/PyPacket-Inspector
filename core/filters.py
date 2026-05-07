@@ -32,17 +32,15 @@ def input_filters(active_interfaces):
 
     validate_interfaces(active_interfaces)
 
-    if len(active_interfaces) >= 2:
-        active_interfaces.insert(0, " All")
-
     print(" 1) Configure Filters")
     
-    interface_filter = inquirer.select(message="Interface", choices=active_interfaces, default=" All", style=STYLE).execute().strip()
+    interface_filter = inquirer.select(message="Interface", choices=active_interfaces, style=STYLE).execute().strip()
     ip_filter = inquirer.select(message="IP Version", choices=[" All", " IPv4", " IPv6"], default=" All", style=STYLE).execute().strip()
+    ip_filter = None if ip_filter == "All" else ip_filter
     
     address_type_filter = None
     address_type_value = None
-    if ip_filter != "All": 
+    if ip_filter != None: 
         address_type_filter = inquirer.select(message="Address Type", choices=[" None", " Single IP", " Subnet"], default=" None", style=STYLE).execute().strip()
 
         filter_key = None

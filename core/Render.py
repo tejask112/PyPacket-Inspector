@@ -43,9 +43,9 @@ class Renderer:
             if trans_proto == "TCP":
                 flags = transport.get("flags", {})
                 flags_str = "/".join(k for k, v in flags.items() if v)
-                summary = f"{src_ip}:{src_port} -> {dst_ip}:{dst_port}  [{flags_str}]"
+                summary = f"{src_ip}:{src_port} \u2192 {dst_ip}:{dst_port}  [{flags_str}]"
             else:
-                summary = f"{src_ip}:{src_port} -> {dst_ip}:{dst_port}"
+                summary = f"{src_ip}:{src_port} \u2192 {dst_ip}:{dst_port}"
 
             # append domain name if DNS
             if app_proto == "DNS":

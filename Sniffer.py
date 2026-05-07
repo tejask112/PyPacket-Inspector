@@ -4,14 +4,15 @@ from core.utils.NetworkLookupStore import NetworkLookupStore
 from core.RawPacket import RawPacket
 from core.Analyser import Analyser
 from core.Render import Renderer
-
+from core.PacketFilter import PacketFilter
 
 class Sniffer:
     """Sniff raw network packets from a given network interface."""
 
-    def __init__(self, interface, show_detailed_info):
+    def __init__(self, interface, ip_filter, address_type_filter, address_type_value, show_detailed_info):
         """Instantiates a Sniffer object fixed to a specified network interface."""
         self.interface = interface
+        self.packet_filter = PacketFilter(ip_filter=ip_filter, address_type_filter=address_type_filter, address_type_value=address_type_value)
         self.analyser = Analyser()
         self.renderer = Renderer(show_detailed_info=show_detailed_info)
 
@@ -23,6 +24,8 @@ class Sniffer:
             socket.SOCK_RAW,           # type: configures socket to capture raw packet data with headers included
             socket.htons(0x0003)           # protocol: configures socket to capture all ethernet packet types
         )
+
+        
         open_socket.bind((self.interface, 0))
         open_socket.setsockopt(socket.SOL_SOCKET, 8, 1)
 
@@ -42,7 +45,9 @@ class Sniffer:
                 )
 
                 parsed_packet = self.analyser.analyse(raw_packet)
-                self.renderer.render(parsed_packet)
+
+                if self.packet_filter.validate(parsed_packet):
+                    self.renderer.render(parsed_packet)
 
                 
         except KeyboardInterrupt:
