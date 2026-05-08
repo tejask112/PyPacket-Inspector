@@ -17,7 +17,7 @@ class Sniffer:
         self.analyser = Analyser()
         self.renderer = Renderer(show_detailed_info=show_detailed_info)
         self.stats = SessionStatistics()
-        self.detector = AnomalyDetector(scan_window=5, scan_threshold=10, length_subdomain_threshold=35, high_entropy_threshold=1.5)
+        self.detector = AnomalyDetector(scan_window=5, scan_threshold=10, length_subdomain_threshold=35, high_entropy_threshold=3.5)
 
     def start_sniffing(self, socket):
         """Opens a raw socket and continuously captures and prints each packet to terminal."""
