@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from core.utils.NetworkLookupStore import NetworkLookupStore
 from core.RawPacket import RawPacket
 from core.Analyser import Analyser
 from core.Render import Renderer
 from core.PacketFilter import PacketFilter
 from core.SessionStatistics import SessionStatistics
+from core.AnomalyDetector import AnomalyDetector
 
 class Sniffer:
     """Sniff raw network packets from a given network interface."""
@@ -17,6 +17,7 @@ class Sniffer:
         self.analyser = Analyser()
         self.renderer = Renderer(show_detailed_info=show_detailed_info)
         self.stats = SessionStatistics()
+        self.detector = AnomalyDetector(scan_window=5, scan_threshold=10, length_subdomain_threshold=35, high_entropy_threshold=1.5)
 
     def start_sniffing(self, socket):
         """Opens a raw socket and continuously captures and prints each packet to terminal."""
@@ -51,6 +52,7 @@ class Sniffer:
                 if self.packet_filter.validate(parsed_packet):
                     self.renderer.render(parsed_packet)
                     self.stats.record_packet(parsed_packet)
+                    self.detector.run_scan(parsed_packet)
                 
         except KeyboardInterrupt:
             self.stats.render_statistics()

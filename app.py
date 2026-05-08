@@ -4,8 +4,8 @@ import traceback
 
 from visuals.title_text import display_title
 
-from core.filters import input_filters
-from core.network_info import print_network_info, get_active_interfaces
+from core.utils.filters import input_filters
+from core.utils.network_info import print_network_info, get_active_interfaces
 from Sniffer import Sniffer
 
 def start_app():

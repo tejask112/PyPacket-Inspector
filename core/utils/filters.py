@@ -3,7 +3,7 @@ from InquirerPy.utils import get_style
 from InquirerPy.validator import Validator
 from prompt_toolkit.validation import ValidationError
 
-from .utils.validator import validate_ipv4_address, validate_ipv6_address, validate_ipv4_cidr, validate_ipv6_cidr, validate_interfaces
+from .validator import validate_ipv4_address, validate_ipv6_address, validate_ipv4_cidr, validate_ipv6_cidr, validate_interfaces
 
 def make_validator(validate_fn, error_msg):
     class _Validator(Validator):

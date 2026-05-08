@@ -2,7 +2,7 @@ from datetime import datetime
 import socket
 
 from core.utils.NetworkLookupStore import NetworkLookupStore
-from core.network_info import get_local_ipv4, get_local_ipv6
+from core.utils.network_info import get_local_ipv4, get_local_ipv6
 
 class Renderer:
     

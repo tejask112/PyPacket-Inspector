@@ -94,7 +94,7 @@ class Analyser:
         ip_data = parsed_packet.raw_data[14:]
         parsed_packet.network = parse_ipv6(ip_data)
 
-        next_header    = parsed_packet.network.get("next_header")
+        next_header = parsed_packet.network.get("next_header")
         payload_length = parsed_packet.network.get("payload_length", len(ip_data) - 40)
 
         transport_data = ip_data[40:40 + payload_length]

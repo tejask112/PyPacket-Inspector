@@ -40,7 +40,7 @@ def parse_arp(arp_data: bytes) -> dict:
         "hlen": hlen,
         "plen": plen,
         "operation": operation,
-        "op_label": _op_label(operation), #
+        "op_label": _op_label(operation),
         "sender_mac": _format_mac(sender_mac_raw),
         "sender_ip": socket.inet_ntoa(sender_ip_raw),
         "target_mac": _format_mac(target_mac_raw),
